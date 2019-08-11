@@ -1,0 +1,49 @@
+{
+    "account": "123456789012",
+    "detail": {
+        "awsRegion": "us-east-1",
+        "eventID": "24d7a595-4c20-46c1-8143-10b64055bf9f",
+        "eventName": "ListObjects",
+        "eventSource": "s3.amazonaws.com",
+        "eventTime": "2019-08-10T13:04:25Z",
+        "eventType": "AwsApiCall",
+        "eventVersion": "1.05",
+        "readOnly": true,
+        "recipientAccountId": "123456789012",
+        "requestID": "920733F68B653FDF",
+        "requestParameters": {
+        },
+        "resources": [
+        ],
+        "responseElements": null,
+        "sourceIPAddress": "54.52.68.192",
+        "userAgent": "[Boto3/1.9.111 Python/3.7.4 Linux/4.14.77-70.59.amzn1.x86_64 Botocore/1.12.168 Resource]",
+        "userIdentity": {
+            "accessKeyId": "ASIAFNORD",
+            "accountId": "123456789012",
+            "arn": "arn:aws:sts::123456789012:assumed-role/ROLENAME/i-INSTANCEIDBLAH",
+            "principalId": "AROAFNORD:i-INSTANCEIDBLAH",
+            "sessionContext": {
+                "attributes": {
+                    "creationDate": "2019-08-10T09:45:23Z",
+                    "mfaAuthenticated": "false"
+                },
+                "sessionIssuer": {
+                    "accountId": "123456789012",
+                    "arn": "arn:aws:iam::123456789012:role/ROLENAME",
+                    "principalId": "AROAFNORD",
+                    "type": "Role",
+                    "userName": "ROLENAME"
+                }
+            },
+            "type": "AssumedRole"
+        }
+    },
+    "detail-type": "AWS API Call via CloudTrail",
+    "id": "a6781eb2-f432-837e-1bd3-58540ad390f4",
+    "region": "us-east-1",
+    "resources": [],
+    "source": "aws.s3",
+    "time": "2019-08-10T13:04:25Z",
+    "version": "0"
+}

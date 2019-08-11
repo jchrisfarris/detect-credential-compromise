@@ -1,0 +1,25 @@
+{
+  "all_ips": [
+    "nn.nn.nn.nn",
+    "mm.mm.mm.mm",
+    "aa.aa.aa.aa",
+    "bb.bb.bb.bb"
+  ],
+  "data_collected": "2019-08-10 12:19:59.336394",
+  "instances": {
+    "i-00blah": [
+      "aa.aa.aa.aa"
+    ],
+    "i-00d1blah": [
+      "bb.bb.bb.bb",
+      "nn.nn.nn.nn",
+      "mm.mm.mm.mm"
+    ]
+  },
+  "nat_gateways": {
+    "vpc-043fnord": [
+      "nn.nn.nn.nn",
+      "mm.mm.mm.mm"
+    ]
+  }
+}
