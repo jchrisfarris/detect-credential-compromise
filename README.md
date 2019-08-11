@@ -19,13 +19,13 @@ The second template leverages Kinesis Streams and the CloudWatch Logs group that
 
 ## How does it work
 
-An Inventory Lambda runs every 10 minutes and gathers up all the EC2 Instance PublicIps and all the VPC NatGateways in the account. This is saved to S3 and becomes the known list of IPs we'd expect an Instance Profile's API calls to originate from.
+An Inventory Lambda runs every 10 minutes and gathers up all the EC2 Instance PublicIps and all the VPC NatGateways in the account. This is saved to S3 and becomes the list of known IPs we'd expect an Instance Profile's API calls to originate from.
 
 The Kinesis Stream or SQS Queue invokes a Detection lambda that looks at the `sourceIPAddress` in the event and compares it to the list of expected IP addresses for the instance and in the AWS account.
 
 When the Lambda flags an issue, it will publish the message to an SNS Topic you specify as a parameter of the CF Template. This allows for the centralized gathering of these detected events and provides an easy way to push them to Slack, Splunk or just email.
 
-Events are filtered based on `userIdentity.type` being `AssumedRole`. `sourceIPAddress`es that are `*.amazonaws.com` are also excluded, as these are calls made by AWS on your behalf.
+Events are filtered based on `userIdentity.type` being `AssumedRole`. Any `sourceIPAddress` that contains `*.amazonaws.com` are also excluded, as these are calls made by AWS on your behalf.
 
 
 ## Deployment
@@ -82,7 +82,11 @@ This is the json we send to the SNS Topic
 }
 ```
 
-The `uniq_id` is created to allow you to deduplicate messages in your downstream processing engine.
+The `uniq_id` is created to allow you to de-duplicate messages in your downstream processing engine.
+
+`type` can be:
+* `BadSource` - `SourceIPAddress` is not from the known list
+* `InstanceMissing` - The instance id in the request is not found in the inventory file
 
 ### False Positives
 
@@ -91,11 +95,11 @@ The `uniq_id` is created to allow you to deduplicate messages in your downstream
 
 ## Challenges
 
-There are a few challenges with this approach. This stack itself generates events, and those events trigger this function.
+There are a few challenges with this approach. This stack itself generates events and those events trigger this function.
 
 The Kinesis solution requires that CloudTrail is delivering to a CloudWatch Logs group, and each CloudWatch Logs group can have only one subscription filter and Kinesis stream. So if you're already doing something with your CloudTrail Events in CloudWatch logs, this solution won't work out of the box.
 
-When using CloudWatch Events, the pattern matching is not complex. I cannot use a regex to detect only Instance Profile credentials. As a result, there is less logging than would be desired, and the lambda will compare the event `accessKeyId` to it's own access key (via the AWS_ACCESS_KEY_ID environment variable), and stop processing the event without logging anything (because writing a log generates another event).
+When using CloudWatch Events, the pattern matching is not complex. I cannot use a regex to detect only Instance Profile credentials. As a result, there is less logging than would be desired, and the lambda will compare the event `accessKeyId` to it's own access key (via the AWS_ACCESS_KEY_ID environment variable), and stop processing the event without logging anything (because writing a log generates another cloudwatch API event).
 
 The Cloud Watch Event Pattern is:
 ```json
@@ -128,3 +132,15 @@ For both solutions a default reserve concurrency limit of 100 to prevent this fu
 The initial idea for this tool was [Will Bengston](https://twitter.com/__muscles)'s 2018 post on [Detecting Credential Compromise in AWS](https://medium.com/netflix-techblog/netflix-cloud-security-detecting-credential-compromise-in-aws-9493d6fd373a)
 
 This tool is non-intrusive and doesn't require any enterprise tooling. My initial attempt to address the Capital One breach was to leverage a bunch of centralized enterprise tools. Once I took a step back to figure out how I'd protect my own AWS accounts, I realized I was trying to protect _everything_ rather than protecting _anything_.
+
+## This solutions sucks, how do I really detect SSRF based Credential Compromise?
+
+Yup, this solution isn't ideal. However AWS provides minimal protections for the http://169.254.169.254/ metadata service. There are not required headers and there is no logging.
+
+Additionally, GuardDuty is limited to telling you if the credentials are used outside of AWS. The Capital One attacked bypassed GuardDuty by compromising someone else's account and using the credentials there.
+
+I'd recommend reaching out to your account team and asking AWS to improve both of these services.
+
+Will Bengston did publish another concept [Dynamically Locking AWS Credentials to Your Environment](https://medium.com/@williambengtson/active-defense-dynamically-locking-aws-credentials-to-your-environment-47a9c920e704) which injects Deny statements if they API calls are not coming from the known locations. Additionally, he proposes a Metadata service proxy that sits between the on-instance SDKs and the hypervisor based Metadata service.
+
+Both of these options require a significant re-engineering effort and regression testing before they can be pushed to production.
