@@ -3,6 +3,9 @@
 test_event.json
 Attic/
 
+detect-credential-compromise.output.yaml
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -137,3 +140,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
